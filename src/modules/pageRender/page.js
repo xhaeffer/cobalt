@@ -349,6 +349,12 @@ export default function(obj) {
                         }, {
                             action: "360",
                             text: "360p"
+                        }, {
+                            action: "240",
+                            text: "240p"
+                        }, {
+                            action: "144",
+                            text: "144p"
                         }]
                     })
                 })
@@ -582,8 +588,8 @@ export default function(obj) {
         <div id="popup-backdrop" onclick="hideAllPopups()"></div>
         <div id="home" style="visibility:hidden">
             ${urgentNotice({
-                emoji: "🔒",
-                text: t("UpdateEncryption"),
+                emoji: "🫧",
+                text: t("UpdateIstream"),
                 visible: true,
                 action: "popup('about', 1, 'changelog')"
             })}
