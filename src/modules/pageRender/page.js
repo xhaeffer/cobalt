@@ -47,14 +47,9 @@ for (let i in donations["crypto"]) {
 }
 
 export default function(obj) {
-    const t = (str, replace) => { return loc(obj.lang, str, replace) };
-
-    let ua = obj.useragent.toLowerCase();
-    let isIOS = ua.match("iphone os");
-    let isMobile = ua.match("android") || ua.match("iphone os");
-
-    let platform = isMobile ? "m" : "d";
-    if (isMobile && isIOS) platform = "i";
+    const t = (str, replace) => {
+        return loc(obj.lang, str, replace)
+    }
 
     audioFormats[0]["text"] = t('SettingsAudioFormatBest');
 
@@ -64,7 +59,7 @@ export default function(obj) {
 <html lang="${obj.lang}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="viewport-fit=cover, width=device-width, height=device-height, initial-scale=1, maximum-scale=${isIOS ? `1` : `5`}">
+        <meta name="viewport" content="viewport-fit=cover, width=device-width, height=device-height, initial-scale=1, maximum-scale=1">
 
         <title>${t("AppTitleCobalt")}</title>
 
@@ -74,7 +69,6 @@ export default function(obj) {
         <meta property="og:image" content="${env.webURL}icons/generic.png">
         <meta name="title" content="${t("AppTitleCobalt")}">
         <meta name="description" content="${t('AboutSummary')}">
-        <meta name="theme-color" content="#000000">
         <meta name="twitter:card" content="summary">
         
         <meta name="apple-mobile-web-app-capable" content="yes">
@@ -91,6 +85,8 @@ export default function(obj) {
         <link rel="stylesheet" href="fonts/notosansmono.css">
         <link rel="stylesheet" href="cobalt.css">
 
+        <meta name="theme-color" content="#000000">
+
         <link rel="preload" href="fonts/notosansmono.css" as="style">
         <link rel="preload" href="assets/meowbalt/error.png" as="image">
         <link rel="preload" href="assets/meowbalt/question.png" as="image">
@@ -103,7 +99,7 @@ export default function(obj) {
             ></script>`
         : ''}
     </head>
-    <body id="cobalt-body" ${platform === "d" ? 'class="desktop"' : ''}>
+    <body id="cobalt-body">
         <noscript>
             <div style="margin: 2rem;">${t('NoScriptMessage')}</div>
         </noscript>
@@ -314,7 +310,7 @@ export default function(obj) {
             closeAria: t('AccessibilityGoBack'),
             header: {
                 aboveTitle: {
-                    text: `v.${version}-${obj.hash}${platform} (${obj.branch})`,
+                    text: `v.${version}-${obj.hash} (${obj.branch})`,
                     url: `${repo}/commit/${obj.hash}`
                 },
                 title: `${emoji("⚙️", 30)} ${t('TitlePopupSettings')}`
@@ -562,7 +558,7 @@ export default function(obj) {
                 },
                 body: switcher({
                     name: "download",
-                    explanation: `${!isIOS ? t('DownloadPopupDescription') : t('DownloadPopupDescriptionIOS')}`,
+                    explanation: t('DownloadPopupDescription'),
                     items: `<a id="pd-download" class="switch full" target="_blank" href="/"><span>${t('Download')}</span></a>
                     <div id="pd-share" class="switch full">${t('ShareURL')}</div>
                     <div id="pd-copy" class="switch full">${t('CopyURL')}</div>`
@@ -656,7 +652,8 @@ export default function(obj) {
                 'DataTransferError',
                 'FilenamePreviewVideoTitle',
                 'FilenamePreviewAudioTitle',
-                'FilenamePreviewAudioAuthor'
+                'FilenamePreviewAudioAuthor',
+                'DownloadPopupDescriptionIOS'
             ])}
         </script>
         <script src="cobalt.js"></script>
