@@ -1,8 +1,9 @@
-import { Innertube } from 'youtubei.js';
-import { maxVideoDuration } from '../../config.js';
+import { Innertube, Session } from 'youtubei.js';
+import { env } from '../../config.js';
 import { cleanString } from '../../sub/utils.js';
+import { fetch } from 'undici'
 
-const yt = await Innertube.create();
+const ytBase = await Innertube.create();
 
 const codecMatch = {
     h264: {
@@ -22,7 +23,27 @@ const codecMatch = {
     }
 }
 
+const cloneInnertube = (customFetch) => {
+    const session = new Session(
+        ytBase.session.context,
+        ytBase.session.key,
+        ytBase.session.api_version,
+        ytBase.session.account_index,
+        ytBase.session.player,
+        undefined,
+        customFetch ?? ytBase.session.http.fetch,
+        ytBase.session.cache
+    );
+
+    const yt = new Innertube(session);
+    return yt;
+}
+
 export default async function(o) {
+    const yt = cloneInnertube(
+        (input, init) => fetch(input, { ...init, dispatcher: o.dispatcher })
+    );
+
     let info, isDubbed, format = o.format || "h264";
     let quality = o.quality === "max" ? "9000" : o.quality; // 9000(p) - max quality
 
@@ -36,7 +57,7 @@ export default async function(o) {
 
     try {
         info = await yt.getBasicInfo(o.id, 'WEB');
-    } catch (e) {
+    } catch {
         return { error: 'ErrorCantConnectToServiceAPI' };
     }
 
@@ -71,7 +92,7 @@ export default async function(o) {
 
     if (bestQuality) bestQuality = qual(bestQuality);
     if (!bestQuality && !o.isAudioOnly || !hasAudio) return { error: 'ErrorYTTryOtherCodec' };
-    if (info.basic_info.duration > maxVideoDuration / 1000) return { error: ['ErrorLengthLimit', maxVideoDuration / 60000] };
+    if (info.basic_info.duration > env.durationLimit) return { error: ['ErrorLengthLimit', env.durationLimit / 60] };
 
     let checkBestAudio = (i) => (i.has_audio && !i.has_video),
         audio = adaptive_formats.find(i => checkBestAudio(i) && !i.is_dubbed);

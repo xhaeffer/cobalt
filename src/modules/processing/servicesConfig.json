@@ -59,12 +59,6 @@
             "subdomains": ["vt", "vm"],
             "enabled": true
         },
-        "douyin": {
-            "alias": "douyin videos & audio",
-            "patterns": ["video/:postId", ":id"],
-            "subdomains": ["v"],
-            "enabled": false
-        },
         "vimeo": {
             "patterns": [":id", "video/:id", ":id/:password", "/channels/:user/:id"],
             "enabled": true,
@@ -76,7 +70,7 @@
             "enabled": true
         },
         "instagram": {
-            "alias": "instagram reels, posts & stories",
+            "alias": "instagram posts & reels",
             "altDomains": ["ddinstagram.com"],
             "patterns": [
                 "reels/:postId", ":username/reel/:postId", "reel/:postId", "p/:postId", ":username/p/:postId",
@@ -91,7 +85,7 @@
             "enabled": true
         },
         "pinterest": {
-            "alias": "pinterest videos & stories",
+            "alias": "pinterest (all media)",
             "patterns": ["pin/:id", "pin/:id/:garbage", "url_shortener/:shortLink"],
             "enabled": true
         },

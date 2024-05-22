@@ -1,8 +1,7 @@
 import { strict as assert } from "node:assert";
 
-import { apiJSON } from "../sub/utils.js";
-import { errorUnsupported, genericError, brokenLink } from "../sub/errors.js";
-
+import { env } from '../config.js';
+import { createResponse } from "../processing/request.js";
 import loc from "../../localization/manager.js";
 
 import { testers } from "./servicesPatternTesters.js";
@@ -27,14 +26,37 @@ import rutube from "./services/rutube.js";
 import dailymotion from "./services/dailymotion.js";
 import facebook from "./services/facebook.js";
 
-export default async function(host, patternMatch, url, lang, obj) {
+let freebind;
+
+export default async function(host, patternMatch, lang, obj) {
+    const { url } = obj;
     assert(url instanceof URL);
+    let dispatcher, requestIP;
+
+    if (env.freebindCIDR) {
+        if (!freebind) {
+            freebind = await import('freebind');
+        }
+
+        requestIP = freebind.ip.random(env.freebindCIDR);
+        dispatcher = freebind.dispatcherFromIP(requestIP, { strict: false });
+    }
 
     try {
-        let r, isAudioOnly = !!obj.isAudioOnly, disableMetadata = !!obj.disableMetadata;
+        let r,
+            isAudioOnly = !!obj.isAudioOnly,
+            disableMetadata = !!obj.disableMetadata;
 
-        if (!testers[host]) return apiJSON(0, { t: errorUnsupported(lang) });
-        if (!(testers[host](patternMatch))) return apiJSON(0, { t: brokenLink(lang, host) });
+        if (!testers[host]) {
+            return createResponse("error", {
+                t: loc(lang, 'ErrorUnsupported')
+            });
+        }
+        if (!(testers[host](patternMatch))) {
+            return createResponse("error", {
+                t: loc(lang, 'ErrorBrokenLink', host)
+            });
+        }
 
         switch (host) {
             case "twitter":
@@ -67,7 +89,8 @@ export default async function(host, patternMatch, url, lang, obj) {
                     format: obj.vCodec,
                     isAudioOnly: isAudioOnly,
                     isAudioMuted: obj.isAudioMuted,
-                    dubLang: obj.dubLang
+                    dubLang: obj.dubLang,
+                    dispatcher
                 }
 
                 if (url.hostname === 'music.youtube.com' || isAudioOnly === true) {
@@ -123,7 +146,8 @@ export default async function(host, patternMatch, url, lang, obj) {
             case "instagram":
                 r = await instagram({
                     ...patternMatch,
-                    quality: obj.vQuality
+                    quality: obj.vQuality,
+                    dispatcher
                 })
                 break;
             case "vine":
@@ -166,28 +190,36 @@ export default async function(host, patternMatch, url, lang, obj) {
                 r = await facebook(url.href, patternMatch);
                 break;
             default:
-                return apiJSON(0, { t: errorUnsupported(lang) });
+                return createResponse("error", {
+                    t: loc(lang, 'ErrorUnsupported')
+                });
         }
 
         if (r.isAudioOnly) isAudioOnly = true;
         let isAudioMuted = isAudioOnly ? false : obj.isAudioMuted;
 
-        if (r.error && r.critical)
-            return apiJSON(6, { t: loc(lang, r.error) })
-
-        if (r.error)
-            return apiJSON(0, {
+        if (r.error && r.critical) {
+            return createResponse("critical", {
+                t: loc(lang, r.error)
+            })
+        }
+        if (r.error) {
+            return createResponse("error", {
                 t: Array.isArray(r.error)
                     ? loc(lang, r.error[0], r.error[1])
                     : loc(lang, r.error)
             })
+        }
 
         return matchActionDecider(
             r, host, obj.aFormat, isAudioOnly,
             lang, isAudioMuted, disableMetadata,
-            obj.filenamePattern, obj.twitterGif
+            obj.filenamePattern, obj.twitterGif,
+            requestIP
         )
-    } catch (e) {
-        return apiJSON(0, { t: genericError(lang, host) })
+    } catch {
+        return createResponse("error", {
+            t: loc(lang, 'ErrorBadFetch', host)
+        })
     }
 }
