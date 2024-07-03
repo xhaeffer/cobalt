@@ -2,8 +2,9 @@ import { Innertube, Session } from 'youtubei.js';
 import { env } from '../../config.js';
 import { cleanString } from '../../sub/utils.js';
 import { fetch } from 'undici'
+import { getCookie, updateCookieValues } from '../cookie/manager.js'
 
-const ytBase = await Innertube.create();
+const ytBase = Innertube.create().catch(e => e);
 
 const codecMatch = {
     h264: {
@@ -23,24 +24,70 @@ const codecMatch = {
     }
 }
 
-const cloneInnertube = (customFetch) => {
+const transformSessionData = (cookie) => {
+    if (!cookie)
+        return;
+
+    const values = cookie.values();
+    const REQUIRED_VALUES = [
+        'access_token', 'refresh_token',
+        'client_id', 'client_secret',
+        'expires'
+    ];
+
+    if (REQUIRED_VALUES.some(x => typeof values[x] !== 'string')) {
+        return;
+    }
+    return {
+        ...values,
+        expires: new Date(values.expires),
+    };
+}
+
+const cloneInnertube = async (customFetch) => {
+    const innertube = await ytBase;
+    if (innertube instanceof Error) {
+        throw innertube;
+    }
+
     const session = new Session(
-        ytBase.session.context,
-        ytBase.session.key,
-        ytBase.session.api_version,
-        ytBase.session.account_index,
-        ytBase.session.player,
+        innertube.session.context,
+        innertube.session.key,
+        innertube.session.api_version,
+        innertube.session.account_index,
+        innertube.session.player,
         undefined,
-        customFetch ?? ytBase.session.http.fetch,
-        ytBase.session.cache
+        customFetch ?? innertube.session.http.fetch,
+        innertube.session.cache
     );
+
+    const cookie = getCookie('youtube_oauth');
+    const oauthData = transformSessionData(cookie);
+
+    if (!session.logged_in && oauthData) {
+        await session.oauth.init(oauthData);
+        session.logged_in = true;
+    }
+
+    if (session.logged_in) {
+        await session.oauth.refreshIfRequired();
+        const oldExpiry = new Date(cookie.values().expires);
+        const newExpiry = session.oauth.credentials.expires;
+
+        if (oldExpiry.getTime() !== newExpiry.getTime()) {
+            updateCookieValues(cookie, {
+                ...session.oauth.credentials,
+                expires: session.oauth.credentials.expires.toISOString()
+            });
+        }
+    }
 
     const yt = new Innertube(session);
     return yt;
 }
 
 export default async function(o) {
-    const yt = cloneInnertube(
+    const yt = await cloneInnertube(
         (input, init) => fetch(input, { ...init, dispatcher: o.dispatcher })
     );
 
@@ -56,14 +103,32 @@ export default async function(o) {
     }
 
     try {
-        info = await yt.getBasicInfo(o.id, 'WEB');
-    } catch {
-        return { error: 'ErrorCantConnectToServiceAPI' };
+        info = await yt.getBasicInfo(o.id, yt.session.logged_in ? 'ANDROID' : 'IOS');
+    } catch(e) {
+        if (e?.message === 'This video is unavailable') {
+            return { error: 'ErrorCouldntFetch' };
+        } else {
+            return { error: 'ErrorCantConnectToServiceAPI' };
+        }
     }
 
     if (!info) return { error: 'ErrorCantConnectToServiceAPI' };
 
-    if (info.playability_status.status !== 'OK') return { error: 'ErrorYTUnavailable' };
+    const playability = info.playability_status;
+
+    if (playability.status === 'LOGIN_REQUIRED') {
+        if (playability.reason.endsWith('bot')) {
+            return { error: 'ErrorYTLogin' }
+        }
+        if (playability.reason.endsWith('age')) {
+            return { error: 'ErrorYTAgeRestrict' }
+        }
+    }
+    if (playability.status === "UNPLAYABLE" && playability.reason.endsWith('request limit.')) {
+        return { error: 'ErrorYTRateLimit' }
+    }
+
+    if (playability.status !== 'OK') return { error: 'ErrorYTUnavailable' };
     if (info.basic_info.is_live) return { error: 'ErrorLiveVideo' };
 
     // return a critical error if returned video is "Video Not Available"

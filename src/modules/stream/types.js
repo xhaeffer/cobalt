@@ -5,17 +5,13 @@ import { create as contentDisposition } from "content-disposition-header";
 
 import { metadataManager } from "../sub/utils.js";
 import { destroyInternalStream } from "./manage.js";
-import { env, ffmpegArgs } from "../config.js";
-import { getHeaders, closeResponse } from "./shared.js";
+import { env, ffmpegArgs, hlsExceptions } from "../config.js";
+import { getHeaders, closeRequest, closeResponse, pipe } from "./shared.js";
 
 function toRawHeaders(headers) {
     return Object.entries(headers)
                  .map(([key, value]) => `${key}: ${value}\r\n`)
                  .join('');
-}
-
-function closeRequest(controller) {
-    try { controller.abort() } catch {}
 }
 
 function killProcess(p) {
@@ -26,16 +22,6 @@ function killProcess(p) {
             // brutally murder the process if it didn't quit
             p?.kill('SIGKILL');
     }, 5000);
-}
-
-function pipe(from, to, done) {
-    from.on('error', done)
-        .on('close', done);
-
-    to.on('error', done)
-      .on('close', done);
-
-    from.pipe(to);
 }
 
 function getCommand(args) {
@@ -105,6 +91,10 @@ export function streamLiveRender(streamInfo, res) {
         ]
 
         args = args.concat(ffmpegArgs[format]);
+
+        if (hlsExceptions.includes(streamInfo.service)) {
+            args.push('-bsf:a', 'aac_adtstoasc')
+        }
 
         if (streamInfo.metadata) {
             args = args.concat(metadataManager(streamInfo.metadata))
@@ -215,7 +205,7 @@ export function streamVideoOnly(streamInfo, res) {
             args.push('-an')
         }
 
-        if (["vimeo", "rutube", "dailymotion"].includes(streamInfo.service)) {
+        if (hlsExceptions.includes(streamInfo.service)) {
             args.push('-bsf:a', 'aac_adtstoasc')
         }
 

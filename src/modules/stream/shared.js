@@ -1,5 +1,4 @@
 import { genericUserAgent } from "../config.js";
-import { cookie as tiktokCookie } from "../processing/services/tiktok.js";
 
 const defaultHeaders = {
     'user-agent': genericUserAgent
@@ -14,19 +13,33 @@ const serviceHeaders = {
         origin: 'https://www.youtube.com',
         referer: 'https://www.youtube.com',
         DNT: '?1'
-    },
-    tiktok: {
-        cookie: tiktokCookie
     }
 }
 
+export function closeRequest(controller) {
+    try { controller.abort() } catch {}
+}
+
 export function closeResponse(res) {
-    if (!res.headersSent) res.sendStatus(500);
-    return res.destroy();
+    if (!res.headersSent) {
+        res.sendStatus(500);
+    }
+
+    return res.end();
 }
 
 export function getHeaders(service) {
     // Converting all header values to strings
     return Object.entries({ ...defaultHeaders, ...serviceHeaders[service] })
         .reduce((p, [key, val]) => ({ ...p, [key]: String(val) }), {})
+}
+
+export function pipe(from, to, done) {
+    from.on('error', done)
+        .on('close', done);
+
+    to.on('error', done)
+      .on('close', done);
+
+    from.pipe(to);
 }

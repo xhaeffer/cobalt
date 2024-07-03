@@ -1,5 +1,6 @@
 {
-    "audioIgnore": ["vk", "ok"],
+    "audioIgnore": ["vk", "ok", "loom"],
+    "hlsExceptions": ["dailymotion", "vimeo", "rutube"],
     "config": {
         "bilibili": {
             "alias": "bilibili.com & bilibili.tv",
@@ -32,6 +33,7 @@
         "vk": {
             "alias": "vk video & clips",
             "patterns": ["video:userId_:videoId", "clip:userId_:videoId", "clips:duplicate?z=clip:userId_:videoId"],
+            "subdomains": ["m"],
             "enabled": true
         },
         "ok": {
@@ -55,14 +57,15 @@
         },
         "tiktok": {
             "alias": "tiktok videos, photos & audio",
-            "patterns": [":user/video/:postId", ":id", "t/:id", ":user/photo/:postId"],
-            "subdomains": ["vt", "vm"],
+            "patterns": [":user/video/:postId", ":id", "t/:id", ":user/photo/:postId", "v/:id.html"],
+            "subdomains": ["vt", "vm", "m"],
             "enabled": true
         },
         "vimeo": {
             "patterns": [":id", "video/:id", ":id/:password", "/channels/:user/:id"],
-            "enabled": true,
-            "bestAudio": "mp3"
+            "subdomains": ["player"],
+            "bestAudio": "mp3",
+            "enabled": true
         },
         "soundcloud": {
             "patterns": [":author/:song/s-:accessKey", ":author/:song", ":shortLink"],
@@ -103,7 +106,7 @@
         "rutube": {
             "alias": "rutube videos",
             "tld": "ru",
-            "patterns": ["video/:id", "play/embed/:id", "shorts/:id", "yappy/:yappyId"],
+            "patterns": ["video/:id", "play/embed/:id", "shorts/:id", "yappy/:yappyId", "video/private/:id?p=:key", "video/private/:id"],
             "enabled": true
         },
         "dailymotion": {
@@ -122,6 +125,11 @@
                 "reel/:id",
                 "share/v/:id"
             ],
+            "enabled": true
+        },
+        "loom": {
+            "alias": "loom videos",
+            "patterns": ["share/:id"],
             "enabled": true
 		}
     }

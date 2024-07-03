@@ -25,6 +25,7 @@ import twitch from "./services/twitch.js";
 import rutube from "./services/rutube.js";
 import dailymotion from "./services/dailymotion.js";
 import facebook from "./services/facebook.js";
+import loom from "./services/loom.js";
 
 let freebind;
 
@@ -63,7 +64,8 @@ export default async function(host, patternMatch, lang, obj) {
                 r = await twitter({
                     id: patternMatch.id,
                     index: patternMatch.index - 1,
-                    toGif: !!obj.twitterGif
+                    toGif: !!obj.twitterGif,
+                    dispatcher
                 });
                 break;
             case "vk":
@@ -179,6 +181,7 @@ export default async function(host, patternMatch, lang, obj) {
                 r = await rutube({
                     id: patternMatch.id,
                     yappyId: patternMatch.yappyId,
+                    key: patternMatch.key,
                     quality: obj.vQuality,
                     isAudioOnly: isAudioOnly
                 });
@@ -188,6 +191,11 @@ export default async function(host, patternMatch, lang, obj) {
                 break;
 			case "facebook":
                 r = await facebook(url.href, patternMatch);
+                break;
+            case "loom":
+                r = await loom({
+                    id: patternMatch.id
+                });
                 break;
             default:
                 return createResponse("error", {

@@ -1089,6 +1089,14 @@
             "code": 200,
             "status": "stream"
         }
+    }, {
+        "name": "private video",
+        "url": "https://rutube.ru/video/private/1161415be0e686214bb2a498165cab3e/?p=_IL1G8RSnKutunnTYwhZ5A",
+        "params": {},
+        "expected": {
+            "code": 200,
+            "status": "stream"
+        }
     }],
     "ok": [{
         "name": "regular video",
@@ -1124,50 +1132,30 @@
             "status": "stream"
         }
     }],
-    "facebook": [{
-        "name": "direct video with username and id",
-        "url": "https://web.facebook.com/100048111287134/videos/1157798148685638/",
+    "loom": [{
+        "name": "1080p video",
+        "url": "https://www.loom.com/share/313bf71d20ca47b2a35b6634cefdb761",
         "params": {},
+        "expected": {
+            "code": 200,
+            "status": "redirect"
+        }
+    }, {
+        "name": "1080p video (muted)",
+        "url": "https://www.loom.com/share/313bf71d20ca47b2a35b6634cefdb761",
+        "params": {
+            "isAudioMuted": true
+        },
         "expected": {
             "code": 200,
             "status": "stream"
         }
     }, {
-        "name": "direct video with id as query param",
-        "url": "https://web.facebook.com/watch/?v=883839773514682&ref=sharing",
-        "params": {},
-        "expected": {
-            "code": 200,
-            "status": "stream"
-        }
-    }, {
-        "name": "direct video with caption",
-        "url": "https://web.facebook.com/wood57/videos/𝐒𝐞𝐛𝐚𝐬𝐤𝐨𝐦-𝐟𝐮𝐥𝐥/883839773514682",
-        "params": {},
-        "expected": {
-            "code": 200,
-            "status": "stream"
-        }
-    }, {
-        "name": "shortlink video",
-        "url": "https://fb.watch/r1K6XHMfGT/",
-        "params": {},
-        "expected": {
-            "code": 200,
-            "status": "stream"
-        }
-    }, {
-        "name": "reel video",
-        "url": "https://web.facebook.com/reel/730293269054758",
-        "params": {},
-        "expected": {
-            "code": 200,
-            "status": "stream"
-        }
-	}, {
-        "name": "shared video link",
-        "url": "https://www.facebook.com/share/v/NEf87jbPTvFE8LsL/",
-        "params": {},
+        "name": "1080p video (audio only)",
+        "url": "https://www.loom.com/share/313bf71d20ca47b2a35b6634cefdb761",
+        "params": {
+            "isAudioOnly": true
+        },
         "expected": {
             "code": 200,
             "status": "stream"
