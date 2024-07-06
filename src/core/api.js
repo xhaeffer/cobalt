@@ -1,3 +1,5 @@
+import https from "https";
+import fs from "fs";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 
@@ -219,7 +221,15 @@ export function runAPI(express, app, gitCommit, gitBranch, __dirname) {
     randomizeCiphers();
     setInterval(randomizeCiphers, 1000 * 60 * 30); // shuffle ciphers every 30 minutes
 
-    app.listen(env.apiPort, env.listenAddress, () => {
+    // Load SSL certificate
+    const options = {
+      key: fs.readFileSync("/etc/letsencrypt/live/c.suika.pw/privkey.pem"),
+      cert: fs.readFileSync("/etc/letsencrypt/live/c.suika.pw/fullchain.pem"),
+    };
+
+    const server = https.createServer(options, app);
+
+    server.listen(env.apiPort, env.listenAddress, () => {
         console.log(`\n` +
             `${Cyan("cobalt")} API ${Bright(`v.${version}-${gitCommit} (${gitBranch})`)}\n` +
             `Start time: ${Bright(`${startTime.toUTCString()} (${startTimestamp})`)}\n\n` +

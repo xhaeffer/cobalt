@@ -11,28 +11,30 @@ import { mode } from "./modules/config.js"
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const app = express();
+export const started = async () => {
+  const app = express();
 
-const gitCommit = shortCommit();
-const gitBranch = getCurrentBranch();
+  const gitCommit = shortCommit();
+  const gitBranch = getCurrentBranch();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename).slice(0, -4);
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename).slice(0, -4);
 
-app.disable('x-powered-by');
+  app.disable('x-powered-by');
 
-await loadLoc();
+  await loadLoc();
 
-if (mode === 'API') {
-    const { runAPI } = await import('./core/api.js');
-    runAPI(express, app, gitCommit, gitBranch, __dirname)
-} else if (mode === 'WEB') {
-    const { runWeb } = await import('./core/web.js');
-    await runWeb(express, app, gitCommit, gitBranch, __dirname)
-} else {
-    console.log(
-        Red(`cobalt wasn't configured yet or configuration is invalid.\n`)
-        + Bright(`please run the setup script to fix this: `)
-        + Green(`npm run setup`)
-    )
-}
+  if (mode === 'API') {
+      const { runAPI } = await import('./core/api.js');
+      runAPI(express, app, gitCommit, gitBranch, __dirname)
+  } else if (mode === 'WEB') {
+      const { runWeb } = await import('./core/web.js');
+      await runWeb(express, app, gitCommit, gitBranch, __dirname)
+  } else {
+      console.log(
+          Red(`cobalt wasn't configured yet or configuration is invalid.\n`)
+          + Bright(`please run the setup script to fix this: `)
+          + Green(`npm run setup`)
+      )
+  }
+};
