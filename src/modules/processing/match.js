@@ -24,8 +24,9 @@ import streamable from "./services/streamable.js";
 import twitch from "./services/twitch.js";
 import rutube from "./services/rutube.js";
 import dailymotion from "./services/dailymotion.js";
-import facebook from "./services/facebook.js";
+import snapchat from "./services/snapchat.js";
 import loom from "./services/loom.js";
+import facebook from "./services/facebook.js";
 
 let freebind;
 
@@ -189,12 +190,20 @@ export default async function(host, patternMatch, lang, obj) {
             case "dailymotion":
                 r = await dailymotion(patternMatch);
                 break;
-			case "facebook":
-                r = await facebook(url.href, patternMatch);
+            case "snapchat":
+                r = await snapchat({
+                    hostname: url.hostname,
+                    ...patternMatch
+                });
                 break;
             case "loom":
                 r = await loom({
                     id: patternMatch.id
+                });
+                break;
+            case "facebook":
+                r = await facebook({
+                    ...patternMatch
                 });
                 break;
             default:

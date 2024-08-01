@@ -28,6 +28,11 @@ export const testers = {
         (patternMatch.author?.length <= 255 && patternMatch.song?.length <= 255)
         || patternMatch.shortLink?.length <= 32,
 
+    "snapchat": (patternMatch) =>
+        (patternMatch.username?.length <= 32 && (!patternMatch.storyId || patternMatch.storyId?.length <= 255)) 
+        || patternMatch.spotlightId?.length <= 255 
+        || patternMatch.shortLink?.length <= 16,
+
     "streamable": (patternMatch) =>
         patternMatch.id?.length === 6,
 
@@ -56,5 +61,6 @@ export const testers = {
         patternMatch.shortLink?.length <= 11
         || patternMatch.username?.length <= 30
         || patternMatch.caption?.length <= 255
-        || patternMatch.id?.length <= 20,
+        || patternMatch.id?.length <= 20 && !patternMatch.shareType
+        || patternMatch.id?.length <= 20 && patternMatch.shareType?.length === 1,
 }
